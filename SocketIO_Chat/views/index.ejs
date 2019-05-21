@@ -3,9 +3,122 @@
   <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+      body{
+        margin-top: 40px;
+      }
+      .well{
+        background-color: rgb(156, 69, 113);
+        padding: 20px 40px;
+        margin: 10px;
+        color: white;
+        border-radius: 20px;
+      }
+      #messageArea{
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
+    <div class="container">
+
+      <div id="userFormArea" class="row">
+        <div class="col-md-12">
+            <form action="/" id="userForm">
+              <div class="form-group">
+                <label for="" class="mt-2">Enter UserName</label>
+                <input name="" id="username" class="form-control"></input>
+                <br>
+                <input type="submit" class="btn btn-danger float-right" value="login">
+              </div>
+            </form>
+        </div>
+      </div>
+
+      <div id="messageArea" class="row">
+
+        <div class="col-md-4">
+          <div class="well">
+            <h3 class="text-center">Online Users</h3>
+            <ul id="users" class="list-group"></ul>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div class="chat" id="chat"></div>
+
+          <form action="/" id="messageForm">
+            <div class="form-group">
+              <label for="" class="mt-2">Enter Message</label>
+              <textarea name="" id="message" class="form-control"></textarea>
+              <br>
+              <input type="submit" class="btn btn-danger float-right" value="Send Message">
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+    
+    <script>
+      $(function () {
+          var socket = io.connect('http://localhost:3000');
+          
+          var messageForm = $('#messageForm');
+          var message = $('#message');
+          var chat = $('#chat');
+
+          var messageArea = $('#messageArea');
+          var userFormArea = $('#userFormArea');
+
+          var users = $('#users');
+
+          var userForm = $('#userForm');
+          var username = $('#username');
+
+          // gửi message lên server
+          messageForm.submit(function(data){
+            data.preventDefault();
+            socket.emit('send message', message.val());
+            message.val('');
+          })
+
+          socket.on('new message', function(data){
+            chat.append('<div class="well"> <strong>' + data.user + '</strong>: ' + data.msg + '</div>')
+          })
+
+          // gửi user lên server
+          userForm.submit(function(data){
+            data.preventDefault();
+            socket.emit('new user', username.val(), function(data){
+              if(data){
+                userFormArea.hide();
+                messageArea.show();
+              }
+            });
+            username.val('');
+          })
+
+          socket.on('get users', function(data){
+            var html = '';
+            for(i = 0; i < data.length; i++){
+              html += '<li class="">' + data[i] + '</li>'; 
+            }
+            
+            users.html(html);
+          })
+
+          mes.addEventListener('keypress', function(){
+            socket.emit('typing', username.val());
+          })
+
+
+        });
+    </script>
+
   </body>
 </html>
